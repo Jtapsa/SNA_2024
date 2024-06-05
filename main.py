@@ -46,21 +46,14 @@ def plotHistograms(df, column, N):
         counts[tag] = entities.count(tag)
         
     top_n = dict(sorted(counts.items(), key=itemgetter(1), reverse=True)[:N])
+    
+    print(top_n)
 
     plt.bar(list(top_n.keys()), top_n.values(), color='g')
     plt.show()
 
-# Plotting degree distribution
 
-def plotDegree(Network):
-    degrees = [Network.degree(n) for n in Network.nodes()]
-    nodes = [n for n in Network.nodes()]
-    
-    plt.hist(degrees)
-    print(nodes)
-    plt.show()
-    
-# Plotting top ten highest degree nodes and bag of phrase entities in terms of named-entities
+# Plotting top ten highest degree nodes and bag of phrase entities in terms of named-entities and degree distribution as wells
 
 def plotDegree(Network, dataframe, N):
     
@@ -170,6 +163,41 @@ def tokenPopularity(dataframe, originalData, types):
         filename = t + '.csv'
         df.to_csv(filename, index=False)
         
+    
+def tokenPopularity2(dataframe, types):
+    
+    for t in types:  
+        counts = {}
+        for index, row in dataframe.iterrows():
+            
+            tokens = row['bag_of_phrases'].split()
+            val = row[t]
+            for tok in tokens:
+                               
+                if counts.get(str(tok)):
+                    counts[str(tok)] = counts.get(str(tok)) + val
+                else:
+                    counts[str(tok)] = val
+                           
+        top_five = dict(sorted(counts.items(), key=itemgetter(1), reverse=True)[:5])
+        worst_five = dict(sorted(counts.items(), key=itemgetter(1), reverse=False)[:5])
+        tag_count = []
+        
+        for x in top_five:
+            new_row = {'token' : x, 'count' : top_five[x]}
+            tag_count.append(new_row)
+            
+        for x in worst_five:
+            new_row = {'token' : x, 'count' : worst_five[x]}
+            tag_count.append(new_row)
+        
+        df = pd.DataFrame(tag_count)
+        filename = t + '_bag_of_phrases.csv'
+        df.to_csv(filename, index=False)
+        
+        
+        
+        
         
 def communities():
     G = read()
@@ -211,7 +239,7 @@ def wordcloud_Communities(dataframe):
         for idd in com:
             data = dataframe['bag_of_phrases'].loc[dataframe['id'] == int(idd)]
             data = data.item()
-            temp = data.split(',')
+            temp = data.split()
             for ele in temp:
                 for d in del_list:
                     ele = ele.replace(d, '')
@@ -300,6 +328,7 @@ def partOne():
 def partTwo():
     # -- calculating token popularity in case of retweet, reply and likecount -- 
     tokenPopularity(entities, data, ['retweet_count', 'reply_count', 'like_count'])
+    tokenPopularity2(data, ['retweet_count', 'reply_count', 'like_count'])
     # -- plot count of different size of communities -- 
     communities()
     # -- plot word map to tree biggest communities -- 
@@ -310,7 +339,7 @@ def partTwo():
 def partTree():
     # -- Calculates Erdos number for nodes in network --
     erdosNumbers(nodeData)
-    
+
 
 
 
